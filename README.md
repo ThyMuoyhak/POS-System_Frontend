@@ -99,10 +99,10 @@ On Render → your service → **Environment**, add (the origin must match exact
 scheme and host, **no trailing slash**):
 
 ```ini
-CORS_ORIGINS=https://<your-site>.netlify.app
-FRONTEND_BASE_URL=https://<your-site>.netlify.app
-ABA_SUCCESS_URL=https://<your-site>.netlify.app/?payment=success
-ABA_CANCEL_URL=https://<your-site>.netlify.app/?payment=cancel
+CORS_ORIGINS=https://glittery-pony-05abee.netlify.app
+FRONTEND_BASE_URL=https://glittery-pony-05abee.netlify.app
+ABA_SUCCESS_URL=https://glittery-pony-05abee.netlify.app/?payment=success
+ABA_CANCEL_URL=https://glittery-pony-05abee.netlify.app/?payment=cancel
 ```
 
 Save — Render redeploys by itself. The two ABA urls are where the gateway sends
@@ -110,12 +110,12 @@ the **customer's phone**, so a `localhost` value there means the customer never
 comes back to the till. Still running the dev server? Keep both origins:
 
 ```ini
-CORS_ORIGINS=https://<your-site>.netlify.app,http://localhost:3000,http://127.0.0.1:3000
+CORS_ORIGINS=https://glittery-pony-05abee.netlify.app,http://localhost:3000,http://127.0.0.1:3000
 ```
 
 Deploy previews and branch deploys use their own origins
-(`https://<deploy-id>--<your-site>.netlify.app`); to let those in as well, set
-`POS_CORS_ORIGIN_REGEX=^https://([a-z0-9-]+--)?<your-site>\.netlify\.app$`.
+(`https://<deploy-id>--glittery-pony-05abee.netlify.app`); to let those in as well, set
+`POS_CORS_ORIGIN_REGEX=^https://([a-z0-9-]+--)?glittery-pony-05abee\.netlify\.app$`.
 
 ### Check the deployment
 
