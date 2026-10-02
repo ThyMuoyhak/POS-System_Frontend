@@ -302,11 +302,6 @@ function Shell({ user, onSignOut }) {
         ) : null}
 
       </main>
-
-      <footer className="mx-auto max-w-7xl px-4 text-center text-[11px] text-slate-400">
-        ABA POS · signed in as {user ? `${user.username} (${admin ? "administrator" : "cashier"})` : "?"} ·
-        API <span className="font-mono">{API_BASE}</span>
-      </footer>
     </div>
   );
 }
