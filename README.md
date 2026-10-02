@@ -128,8 +128,8 @@ Deploy previews and branch deploys use their own origins
 
 ### If the build fails
 
-**`npm error code EUSAGE` / “`npm ci` can only install packages when your
-package.json and package-lock.json ... are in sync”** — the lockfile drifted away
+**`npm error code EUSAGE` / "`npm ci` can only install packages when your
+package.json and package-lock.json ... are in sync"** — the lockfile drifted away
 from what the dependency ranges allow. It has happened once here: `typescript` is
 an optional peer of `react-scripts` (which asks for `^3.2.1 || ^4`), and an
 `npm install` under Node 22+ (npm 11) floated it to `7.0.2`, while the npm 10 that
@@ -143,9 +143,9 @@ npx --yes npm@10 ci                            # proves Netlify's step will pass
 ```
 
 **A variable in the Netlify UI disagrees with `netlify.toml`.** For builds the
-file wins — Netlify documents that “environment variables set in `netlify.toml`
+file wins — Netlify documents that "environment variables set in `netlify.toml`
 override environment variables set with the same key name using the Netlify UI,
-CLI, and API” — so a stale duplicate is harmless until the day that line leaves
+CLI, and API" — so a stale duplicate is harmless until the day that line leaves
 the file. Delete the duplicate in the UI, or give it the same value; `true` is
 never the right value for `REACT_APP_ALLOW_MANUAL_CONFIRM` in production.
 
