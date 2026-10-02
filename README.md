@@ -126,6 +126,29 @@ Deploy previews and branch deploys use their own origins
 3. On a free Render instance the first request after ~15 idle minutes takes
    30-60 s while the service wakes up; sign-in simply looks slow that once.
 
+### If the build fails
+
+**`npm error code EUSAGE` / “`npm ci` can only install packages when your
+package.json and package-lock.json ... are in sync”** — the lockfile drifted away
+from what the dependency ranges allow. It has happened once here: `typescript` is
+an optional peer of `react-scripts` (which asks for `^3.2.1 || ^4`), and an
+`npm install` under Node 22+ (npm 11) floated it to `7.0.2`, while the npm 10 that
+ships with Netlify's Node 20 still wants `4.9.5`. Netlify validates the lock
+*before* installing, so the build stops there and the site keeps its previous
+deploy. Re-pin the lock with the npm major Netlify uses, then push it:
+
+```powershell
+npx --yes npm@10 install --package-lock-only   # rewrites the lock, not node_modules
+npx --yes npm@10 ci                            # proves Netlify's step will pass
+```
+
+**A variable in the Netlify UI disagrees with `netlify.toml`.** For builds the
+file wins — Netlify documents that “environment variables set in `netlify.toml`
+override environment variables set with the same key name using the Netlify UI,
+CLI, and API” — so a stale duplicate is harmless until the day that line leaves
+the file. Delete the duplicate in the UI, or give it the same value; `true` is
+never the right value for `REACT_APP_ALLOW_MANUAL_CONFIRM` in production.
+
 ## Notes
 
 * The UI stores the bearer token in `localStorage` and clears it on any 401, so a
