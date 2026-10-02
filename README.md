@@ -123,7 +123,8 @@ Deploy previews and branch deploys use their own origins
 2. DevTools → Network: `/api/auth/login` is sent to the Render host and answers
    `200`. "blocked by CORS policy" means `CORS_ORIGINS` does not list the origin
    the browser is on.
-3. On a free Render instance the first request after ~15 idle minutes takes
+3. A `400` with the body `Invalid host header` means the backend `POS_ALLOWED_HOSTS` list does not contain the exact Render hostname, suffix included (`pos-system-backend-4aeo.onrender.com`). An `OPTIONS` preflight still answers `200` in that state, because CORS is handled before the host check, so a healthy preflight does not prove that the rest of the API is reachable.
+4. On a free Render instance the first request after ~15 idle minutes takes
    30-60 s while the service wakes up; sign-in simply looks slow that once.
 
 ### If the build fails
