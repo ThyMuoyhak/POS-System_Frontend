@@ -1,0 +1,59 @@
+# Netlify configuration for the ABA POS front end (Create React App).
+#
+# Settings in this file take precedence over the matching settings in the
+# Netlify UI, so it is the single source of truth for the build - a fork of this
+# repository deploys correctly without anybody clicking through build settings.
+# Reference: https://docs.netlify.com/configure-builds/file-based-configuration/
+
+[build]
+  # `npm ci` installs exactly what the committed package-lock.json pins.
+  command = "npm ci && npm run build"
+  # Create React App writes the production bundle here.
+  publish = "build"
+
+[build.environment]
+  # react-scripts 5 is tested against the LTS releases; 20 is the safest pairing
+  # with the Node in the front end README. A NODE_VERSION variable, .nvmrc or
+  # .node-version all override the version picked in the Netlify UI.
+  NODE_VERSION = "20"
+
+  # Create React App INLINES every REACT_APP_* value into the bundle at build
+  # time: the browser reads them, so they are public and changing one needs a
+  # new deploy. Never put a merchant secret here - that belongs to the backend.
+  REACT_APP_API_BASE = "https://pos-system-backend-4aeo.onrender.com"
+  # The checkout falls back to showing the test-only "mark as paid" button when
+  # this variable is missing, so it must be set to false in production.
+  REACT_APP_ALLOW_MANUAL_CONFIRM = "false"
+  # The source map is only useful to you, and it would double the deploy size.
+  GENERATE_SOURCEMAP = "false"
+
+  # Leave Netlify's own CI=true in place: it makes Create React App fail the
+  # build on lint warnings, which is why `npm run build` was verified with
+  # CI=true. Add CI = "false" here only if a future warning should not block a
+  # deploy.
+
+# ---------------------------------------------------------------------------
+# The POS is one page with no client side router, but the usual SPA fallback
+# keeps a stray path such as /orders on the app instead of Netlify's 404 page.
+# Query strings are preserved, which is what ?payment=success|cancel needs.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# ---------------------------------------------------------------------------
+# Mirror the headers the FastAPI backend already sends.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+
+# Create React App fingerprints every asset (main.<hash>.js), so they can be
+# cached forever: a new build produces new names.
+[[headers]]
+  for = "/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

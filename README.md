@@ -53,6 +53,79 @@ Sign in with an account from the backend. On a fresh backend the very first star
 creates `admin` and writes its password to `backend_api/initial_admin_password.txt`;
 change it from the Security screen afterwards.
 
+## Deploy to Netlify
+
+`netlify.toml` in the repository root carries the whole deployment, so the site
+can be created without touching the build settings:
+
+| Setting | Value | Why |
+| --- | --- | --- |
+| Build command | `npm ci && npm run build` | `npm ci` installs exactly what `package-lock.json` pins |
+| Publish directory | `build` | Create React App output |
+| `NODE_VERSION` | `20` | the LTS pairing `react-scripts` 5 is tested against |
+| `REACT_APP_API_BASE` | `https://pos-system-backend-4aeo.onrender.com` | the deployed FastAPI service, no trailing slash |
+| `REACT_APP_ALLOW_MANUAL_CONFIRM` | `false` | keeps the test-only "mark as paid" button out of production |
+| `GENERATE_SOURCEMAP` | `false` | the source map is only useful to you |
+
+Settings in `netlify.toml` win over the same setting in the Netlify UI, so edit
+the file rather than the dashboard. Nothing here is a secret — Create React App
+inlines `REACT_APP_*` values into the bundle, where anybody can read them.
+
+### Option A — connect the Git repository (recommended)
+
+1. Netlify → **Add new site → Import an existing project → GitHub** →
+   `ThyMuoyhak/POS-System_Frontend`.
+2. Branch `main`, **base directory empty** (the repository root *is* the front
+   end); leave the build command and publish directory as the file sets them.
+3. Deploy. Every push to `main` rebuilds and republishes the site.
+
+### Option B — drag and drop a local build
+
+```powershell
+$env:REACT_APP_API_BASE='https://pos-system-backend-4aeo.onrender.com'
+$env:REACT_APP_ALLOW_MANUAL_CONFIRM='false'
+npm ci; npm run build
+```
+
+Then drop the `build` folder on <https://app.netlify.com/drop>. No variables are
+supplied for you this way, so they must be set in the shell **before**
+`npm run build` — Create React App's `.env` files do not override variables that
+are already set.
+
+### Finish the wiring on the backend
+
+The browser enforces CORS, so the Render service has to name the Netlify origin.
+On Render → your service → **Environment**, add (the origin must match exactly:
+scheme and host, **no trailing slash**):
+
+```ini
+CORS_ORIGINS=https://<your-site>.netlify.app
+FRONTEND_BASE_URL=https://<your-site>.netlify.app
+ABA_SUCCESS_URL=https://<your-site>.netlify.app/?payment=success
+ABA_CANCEL_URL=https://<your-site>.netlify.app/?payment=cancel
+```
+
+Save — Render redeploys by itself. The two ABA urls are where the gateway sends
+the **customer's phone**, so a `localhost` value there means the customer never
+comes back to the till. Still running the dev server? Keep both origins:
+
+```ini
+CORS_ORIGINS=https://<your-site>.netlify.app,http://localhost:3000,http://127.0.0.1:3000
+```
+
+Deploy previews and branch deploys use their own origins
+(`https://<deploy-id>--<your-site>.netlify.app`); to let those in as well, set
+`POS_CORS_ORIGIN_REGEX=^https://([a-z0-9-]+--)?<your-site>\.netlify\.app$`.
+
+### Check the deployment
+
+1. The site opens on the sign-in screen, not on a CORS error.
+2. DevTools → Network: `/api/auth/login` is sent to the Render host and answers
+   `200`. "blocked by CORS policy" means `CORS_ORIGINS` does not list the origin
+   the browser is on.
+3. On a free Render instance the first request after ~15 idle minutes takes
+   30-60 s while the service wakes up; sign-in simply looks slow that once.
+
 ## Notes
 
 * The UI stores the bearer token in `localStorage` and clears it on any 401, so a
